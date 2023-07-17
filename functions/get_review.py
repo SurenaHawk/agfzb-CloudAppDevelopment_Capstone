@@ -22,6 +22,3 @@ def main(dict):
             "message": "Something went wrong on the server",
             "error": str(e)
         }
-
-
-
