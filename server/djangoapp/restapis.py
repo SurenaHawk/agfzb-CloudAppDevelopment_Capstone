@@ -52,43 +52,79 @@ def get_dealers_from_cf(url):
     return res
 
 # Create a get_dealer_reviews_from_cf method to get reviews by dealer id from a cloud function
-def get_dealer_reviews_from_cf (url, dealer_id):
+# def get_dealer_reviews_from_cf (url, dealer_id):
+#     res = []
+#     json_res = get_request(url, dealer_id=dealer_id)
+#     if json_res:
+#         reviews = json_res["reviews"]
+#         for review in reviews:
+#             if isinstance(review, str):
+#                 review_content = json.loads(review)
+#             else:
+#                 review_content = review
+#             id = review["_id"]
+#             review_info = review_content.get("review")
+#             if review_info and "name" and "purchase" and "dealership" and "car_make" and "car_model" and "car_year" and "purchase_date" in review_info:
+#                 name = review_info["name"]
+#                 purchase = review_info["purchase"]
+#                 dealership = review_info["dealership"]
+#                 car_make = review_info["car_make"]
+#                 car_model = review_info["car_model"]
+#                 car_year = review_info["car_year"]
+#                 purchase_date = review_info["purchase_date"]
+#                 review_obj = DealerReview(
+#                     car_make=car_make, 
+#                     car_model=car_model, 
+#                     car_year=car_year,
+#                     dealership=dealership, 
+#                     id=id, 
+#                     name=name, 
+#                     purchase=purchase, 
+#                     purchase_date=purchase_date,
+#                     review=review_content
+#                 )
+#             res.append(review_obj)
+#     return res
+
+def get_dealer_reviews_from_cf(url, dealer_id):
     res = []
     json_res = get_request(url, dealer_id=dealer_id)
-    if json_res:
+    if json_res and "reviews" in json_res:
         reviews = json_res["reviews"]
         for review in reviews:
-            if isinstance(review, str):
-                review_content = json.loads(review)
-            else:
-                review_content = review
-            id = review["_id"]
-            review_info = review_content.get("review")
-            if review_info and "name" and "purchase" and "dealership" and "car_make" and "car_model" and "car_year" and "purchase_date" in review_info:
-                name = review_info["name"]
-                purchase = review_info["purchase"]
-                dealership = review_info["dealership"]
-                car_make = review_info["car_make"]
-                car_model = review_info["car_model"]
-                car_year = review_info["car_year"]
-                purchase_date = review_info["purchase_date"]
-                review_obj = DealerReview(
-                    car_make=car_make, 
-                    car_model=car_model, 
-                    car_year=car_year,
-                    dealership=dealership, 
-                    id=id, 
-                    name=name, 
-                    purchase=purchase, 
-                    purchase_date=purchase_date,
-                    review=review_content
-                )
-            res.append(review_obj)
+                if isinstance(review, dict):
+                    id = review["_id"]
+                    review_content = review.get("review") or review
+                    if isinstance(review_content, dict):
+                        review_fields = review_content.items()
+                    else:
+                        review_fields = review.items()
+                    review_dict = {}
+                    for key, value in review_fields:
+                        if key in ["name", "purchase", "dealership", "car_make", "car_model", "car_year", "purchase_date", "review"]:
+                            review_dict[key] = value
+                    
+                    review_name = review_dict.get("name")
+                    review_purchase = review_dict.get("purchase")
+                    review_dealership = review_dict.get("dealership")
+                    car_make = review_dict.get("car_make")
+                    car_model = review_dict.get("car_model")
+                    car_year = review_dict.get("car_year")
+                    purchase_date = review_dict.get("purchase_date")
+                    review_content_review = review_dict.get("review")
+                    review_dealer = DealerReview(
+                        id=id, 
+                        name=review_name, 
+                        purchase=review_purchase, 
+                        purchase_date=purchase_date,
+                        review=review_content_review,
+                        car_make=car_make, 
+                        car_model=car_model, 
+                        car_year=car_year,
+                        dealership=review_dealership
+                    )
+                    res.append(review_dealer)
     return res
-
-# - Call get_request() with specified arguments
-# - Parse JSON results into a DealerView object list
-
 
 # Create an `analyze_review_sentiments` method to call Watson NLU and analyze text
 # def analyze_review_sentiments(text):
